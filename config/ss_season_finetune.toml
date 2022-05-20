@@ -1,0 +1,83 @@
+[agent]
+name = "depth"
+log_dir = "Logs"
+load_weights_folder = "Logs/ss_season/base/models/weights_30"
+model_name = "finetune"  # the name of the folder to save the model in
+num_workers = 8
+num_epochs = 10
+
+[[train_datasets]]
+name = "DEPTH"
+splits = ["Data/splits/kitti_depth_train_dynamic.json",
+          "Data/splits/nuscenes_dynamic.json",
+          "Data/splits/ddad_depth_dynamic.json",
+          "Data/splits/waymo_train_dynamic.json",
+          "Data/splits/season_depth_train_dynamic_repeat.json",
+          "Data/splits/season_depth_val_dynamic_repeat.json"]
+          # "Data/splits/season_depth_train_dynamic.json",
+          # "Data/splits/season_depth_val_dynamic.json"]
+
+target_focal_length = 438
+
+canvasH = 500
+canvasW = 1300
+
+cropH = 384
+cropW = 512
+
+scaling_method = "rand_crop"
+epoch_reduce_rate = 10
+frame_offsets = [0, -1, 1]
+
+color_aug = true
+
+[[val_datasets]]
+name = "DEPTH"
+splits = ["Data/splits/season_depth_val.json"]
+
+canvasH = 0
+canvasW = 0
+
+cropH = 384
+cropW = 512
+
+scaling_method = "resize"
+epoch_reduce_rate = 1
+frame_offsets = [0]
+
+color_aug = false
+
+[optim]
+batch_size = 36
+learning_rate = 0.00005
+
+lr_decay = 1.0
+lr_decay_step = 10000000  # It means no lr_decay.
+
+[loss]
+w.photo = 1.0
+w.smooth = 0.03
+
+photo.ssim.window_size = 5
+
+scale_weights.schedule = [15,]
+scale_weights.list = [[1.0, 0.4, 0.3, 0.2, 0.1], 
+                      [1.0, 0.0, 0.0, 0.0, 0.0]]
+
+automask_begin_epoch = 0
+
+[net]
+model_name = "self_supervised"
+
+posenet_inH = 384
+posenet_inW = 512
+posenet_inK = [434.0, 0.0, 255.5, 0.0, 434.0, 191.5, 0.0, 0.0, 1.0]
+posenet.transl_scale = 0.01
+posenet.encoder_type = "res18"
+posenet.use_additional_layers = true
+
+depth_module_name = "dp_unet"
+dp_unet.encoder_name = "resnet18"
+dp_unet.encoder_depth = 5
+dp_unet.decoder_channels= [256, 128, 64, 32, 16]
+dp_unet.use_decoder_bn = true
